@@ -13,9 +13,21 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
       - name: Build debug APK
-        run: chmod +x gradlew && ./gradlew assembleDebug --stacktrace
+        run: |
+          SETTINGS=$(find . -name settings.gradle.kts | head -1)
+          if [ -z "$SETTINGS" ]; then
+            echo "settings.gradle.kts not found. Files in repo:"
+            find . -maxdepth 3 -not -path './.git*'
+            exit 1
+          fi
+          cd "$(dirname "$SETTINGS")"
+          echo "Building in: $(pwd)"
+          gradle assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: ClipQR-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: "**/app/build/outputs/apk/debug/*.apk"
